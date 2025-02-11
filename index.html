@@ -17,8 +17,13 @@
     <link rel="dns-prefetch" href="https://img.youtube.com">
     
     <!-- Preload critical resources -->
-    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" as="style">
-    <link rel="preload" href="styles.css" as="style">
+    <link rel="preload" 
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" 
+          as="style"
+          crossorigin="anonymous">
+    <link rel="preload" 
+          href="styles.css" 
+          as="style">
 </head>
 <body>
     <!-- Mobile Sidebar Toggle -->
@@ -34,6 +39,10 @@
                 <h1>VideoVault</h1>
             </div>
             <div class="nav-controls">
+                <div class="search-bar">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="searchInput" placeholder="Search videos...">
+                </div>
                 <button id="viewToggle" class="icon-btn" title="Toggle View">
                     <i class="fas fa-grid"></i>
                 </button>
@@ -54,54 +63,6 @@
                     <i class="fas fa-times"></i>
                 </button>
             </div>
-
-            <div class="filter-group">
-                <h3>Search</h3>
-                <div class="search-bar">
-                    <i class="fas fa-search"></i>
-                    <input type="text" id="searchInput" placeholder="Search videos...">
-                </div>
-            </div>
-
-            <div class="filter-group">
-                <h3>Categories</h3>
-                <div class="filter-chips" id="categoryFilter">
-                    <button class="chip active" data-category="all">All</button>
-                    <button class="chip" data-category="entertainment">Entertainment</button>
-                    <button class="chip" data-category="education">Education</button>
-                    <button class="chip" data-category="music">Music</button>
-                    <button class="chip" data-category="gaming">Gaming</button>
-                    <button class="chip add-category" id="addCategoryBtn">
-                        <i class="fas fa-plus"></i> Add New
-                    </button>
-                </div>
-            </div>
-
-            <div class="filter-group">
-                <h3>Platforms</h3>
-                <div class="filter-chips" id="platformFilter">
-                    <button class="chip active" data-platform="all">All</button>
-                    <button class="chip" data-platform="youtube">
-                        <i class="fa-brands fa-youtube"></i> YouTube
-                    </button>
-                    <button class="chip" data-platform="instagram">
-                        <i class="fa-brands fa-instagram"></i> Reels
-                    </button>
-                    <button class="chip" data-platform="tiktok">
-                        <i class="fa-brands fa-tiktok"></i> TikTok
-                    </button>
-                </div>
-            </div>
-
-            <div class="filter-group">
-                <h3>Sort By</h3>
-                <select id="sortFilter" class="select-styled">
-                    <option value="newest">Newest First</option>
-                    <option value="oldest">Oldest First</option>
-                    <option value="title">Title</option>
-                    <option value="category">Category</option>
-                </select>
-            </div>
         </aside>
 
         <!-- Main Content Area -->
@@ -112,16 +73,49 @@
                         <span id="videoCount">0</span>
                         <p>Videos</p>
                     </div>
-                    <div class="stat-item">
-                        <span id="categoryCount">0</span>
-                        <p>Categories</p>
-                    </div>
                 </div>
                 
-                <div class="draggable-categories" id="dragZone">
-                    <div class="empty-message" style="color: var(--text-light); text-align: center; width: 100%;">
-                        Drag categories here to create shortcuts
+                <div class="platform-stats" id="platformFilter">
+                    <div class="platform-stat active" data-platform="all">
+                        <i class="fas fa-globe"></i>
+                        <span>All</span>
                     </div>
+                    <div class="platform-stat" data-platform="youtube">
+                        <i class="fa-brands fa-youtube"></i>
+                        <span>YouTube</span>
+                    </div>
+                    <div class="platform-stat" data-platform="instagram">
+                        <i class="fa-brands fa-instagram"></i>
+                        <span>Reels</span>
+                    </div>
+                    <div class="platform-stat" data-platform="tiktok">
+                        <i class="fa-brands fa-tiktok"></i>
+                        <span>TikTok</span>
+                    </div>
+                </div>
+
+                <div class="category-container">
+                    <div class="filter-chips" id="categoryFilter">
+                        <button class="chip active" data-category="all">All</button>
+                        <button class="chip" data-category="entertainment">Entertainment</button>
+                        <button class="chip" data-category="education">Education</button>
+                        <button class="chip" data-category="music">Music</button>
+                        <button class="chip" data-category="gaming">Gaming</button>
+                        <button class="chip add-category" id="addCategoryBtn">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sort-container">
+                <div class="sort-filter-container">
+                    <select id="sortFilter" class="select-styled">
+                        <option value="newest">Newest</option>
+                        <option value="oldest">Oldest</option>
+                        <option value="title">Title</option>
+                        <option value="category">Category</option>
+                    </select>
                 </div>
             </div>
 
@@ -233,3 +227,4 @@
     <script src="script.js"></script>
 </body>
 </html>
+
