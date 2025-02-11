@@ -28,8 +28,10 @@ document.addEventListener('DOMContentLoaded', () => {
         },
 
         updateStats: () => {
-            elements.videoCount.textContent = state.videos.length;
-            elements.categoryCount.textContent = state.categories.length;
+            const videoCountElement = document.getElementById('videoCount');
+            if (videoCountElement) {
+                videoCountElement.textContent = state.videos.length;
+            }
         },
 
         detectPlatform: (url) => {
@@ -197,11 +199,9 @@ document.addEventListener('DOMContentLoaded', () => {
             if (video.platform && video.platform.platform) {
                 platformName = video.platform.platform;
                 
-                // Platform-specific handling
                 switch (platformName) {
                     case 'youtube':
                         if (video.platform.videoId) {
-                            // Use the simpler, more reliable thumbnail URL format
                             thumbnailUrl = `https://img.youtube.com/vi/${video.platform.videoId}/hqdefault.jpg`;
                             thumbnailBg = '#FF0000';
                         }
@@ -216,49 +216,49 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             card.innerHTML = `
-                <div class="video-thumbnail" style="background-color: ${thumbnailBg}">
-                    ${thumbnailUrl ? `
-                        <img src="${thumbnailUrl}" 
-                             alt="${video.title}" 
-                             loading="lazy"
-                             onerror="this.style.display='none'; this.parentElement.style.display='flex';"
-                        />
-                    ` : ''}
-                    <span class="platform-badge">
-                        <i class="fa-brands fa-${platformName}"></i>
-                        ${platformName.charAt(0).toUpperCase() + platformName.slice(1)}
-                    </span>
-                    ${!thumbnailUrl ? `
-                        <span class="thumbnail-fallback">
-                            <i class="fa-brands fa-${platformName}" style="font-size: 2rem; opacity: 0.5;"></i>
-                        </span>
-                    ` : ''}
-                </div>
-                <div class="video-info">
-                    <div class="video-header">
-                        <h3 class="video-title">${video.title}</h3>
-                        <span class="platform-badge">
-                            <i class="fa-brands fa-${platformName}"></i>
-                        </span>
-                    </div>
-                    <div class="video-details">
-                        <div class="video-meta">
+                <div class="video-card-content">
+                    <div class="mobile-badges">
+                        <div class="mobile-badge-group">
                             <span class="category-badge">${video.category}</span>
-                            <span class="video-date">${utils.formatDate(video.timestamp)}</span>
+                            <span class="platform-badge">
+                                <i class="fa-brands fa-${platformName}"></i>
+                            </span>
                         </div>
+                    </div>
+                    
+                    <div class="video-thumbnail" style="background-color: ${thumbnailBg}">
+                        ${thumbnailUrl ? `
+                            <img src="${thumbnailUrl}" 
+                                 alt="${video.title}" 
+                                 loading="lazy"
+                                 onerror="this.style.display='none'; this.parentElement.style.display='flex';"
+                            />
+                        ` : `
+                            <span class="thumbnail-fallback">
+                                <i class="fa-brands fa-${platformName}"></i>
+                            </span>
+                        `}
+                    </div>
+
+                    <div class="video-info">
+                        <h3 class="video-title">${video.title}</h3>
                         <div class="video-actions">
                             <div class="action-buttons">
-                                <button class="icon-btn copy-btn" data-link="${video.link}" title="Copy Link">
+                                <button class="icon-btn copy-btn" title="Copy Link">
                                     <i class="fas fa-copy"></i>
                                 </button>
-                                <button class="icon-btn edit-btn" data-id="${video.id}" title="Edit">
+                                <button class="icon-btn edit-btn" title="Edit">
                                     <i class="fas fa-edit"></i>
                                 </button>
-                                <button class="icon-btn delete-btn" data-id="${video.id}" title="Delete">
+                                <button class="icon-btn delete-btn" title="Delete">
                                     <i class="fas fa-trash"></i>
                                 </button>
                             </div>
                         </div>
+                        <span class="video-date">
+                            <i class="far fa-clock"></i>
+                            ${utils.formatDate(video.timestamp)}
+                        </span>
                     </div>
                 </div>
             `;
@@ -400,7 +400,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             // Apply platform filter
-            const selectedPlatform = elements.platformFilter.querySelector('.active').dataset.platform;
+            const selectedPlatform = document.querySelector('.platform-stat.active').dataset.platform;
             if (selectedPlatform !== 'all') {
                 filteredVideos = filteredVideos.filter(video => 
                     video.platform && video.platform.platform === selectedPlatform
@@ -510,6 +510,15 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
+        // Platform Filter Clicks
+        document.querySelectorAll('.platform-stat').forEach(stat => {
+            stat.addEventListener('click', () => {
+                document.querySelector('.platform-stat.active').classList.remove('active');
+                stat.classList.add('active');
+                videoManager.renderVideos();
+            });
+        });
+
         // Hide context menu on click outside
         document.addEventListener('click', (e) => {
             if (!elements.contextMenu.contains(e.target)) {
@@ -607,7 +616,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 // Add the "Add New" button
                 categoryChips.push(`
                     <button class="chip add-category" id="addCategoryBtn">
-                        <i class="fas fa-plus"></i> Add New
+                        <i class="fas fa-plus"></i> 
                     </button>
                 `);
 
@@ -657,25 +666,6 @@ document.addEventListener('DOMContentLoaded', () => {
         setupEventListeners();
         videoManager.renderVideos();
         utils.updateStats();
-
-        // Initialize drag and drop
-        initializeDragAndDrop();
-
-        // Restore dragged categories
-        const savedCategories = JSON.parse(localStorage.getItem('draggedCategories') || '[]');
-        if (savedCategories.length > 0) {
-            const emptyMessage = elements.dragZone.querySelector('.empty-message');
-            if (emptyMessage) {
-                emptyMessage.remove();
-            }
-
-            savedCategories.forEach(category => {
-                const originalChip = document.querySelector(`.filter-chips .chip[data-category="${category}"]`);
-                if (originalChip) {
-                    addDraggedChip(category, elements.dragZone, originalChip);
-                }
-            });
-        }
     }
 
     // Add this helper function to update category UI
@@ -704,132 +694,6 @@ document.addEventListener('DOMContentLoaded', () => {
             chip.classList.add('active');
             videoManager.renderVideos();
         });
-    }
-
-    // Add drag and drop functionality
-    function initializeDragAndDrop() {
-        const chips = document.querySelectorAll('.filter-chips .chip:not(.add-category)');
-        const dragZone = elements.dragZone;
-
-        chips.forEach(chip => {
-            chip.setAttribute('draggable', true);
-            
-            chip.addEventListener('dragstart', (e) => {
-                e.stopPropagation();
-                chip.classList.add('dragging');
-                e.dataTransfer.setData('text/plain', chip.dataset.category);
-            });
-
-            chip.addEventListener('dragend', () => {
-                chip.classList.remove('dragging');
-            });
-        });
-
-        dragZone.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            dragZone.classList.add('drag-over');
-        });
-
-        dragZone.addEventListener('dragleave', () => {
-            dragZone.classList.remove('drag-over');
-        });
-
-        dragZone.addEventListener('drop', (e) => {
-            e.preventDefault();
-            dragZone.classList.remove('drag-over');
-            
-            const category = e.dataTransfer.getData('text/plain');
-            const originalChip = document.querySelector(`.filter-chips .chip[data-category="${category}"]`);
-            
-            if (originalChip && category !== 'all') {
-                // Remove empty message if exists
-                const emptyMessage = dragZone.querySelector('.empty-message');
-                if (emptyMessage) {
-                    emptyMessage.remove();
-                }
-
-                // Check if category already exists
-                const existingChip = dragZone.querySelector(`[data-category="${category}"]`);
-                if (!existingChip) {
-                    addDraggedChip(category, dragZone, originalChip);
-
-                    // Save to localStorage
-                    const savedCategories = JSON.parse(localStorage.getItem('draggedCategories') || '[]');
-                    if (!savedCategories.includes(category)) {
-                        savedCategories.push(category);
-                        localStorage.setItem('draggedCategories', JSON.stringify(savedCategories));
-                    }
-                }
-            }
-        });
-    }
-
-    function addDraggedChip(category, dragZone, originalChip) {
-        const newChip = document.createElement('button');
-        newChip.className = 'chip draggable';
-        newChip.dataset.category = category;
-        newChip.innerHTML = `
-            ${originalChip.textContent}
-            <span class="remove-btn">
-                <i class="fas fa-times"></i>
-            </span>
-        `;
-        newChip.setAttribute('draggable', true);
-
-        // Add drag handlers
-        newChip.addEventListener('dragstart', (e) => {
-            e.stopPropagation();
-            newChip.classList.add('dragging');
-            e.dataTransfer.setData('text/plain', category);
-        });
-
-        newChip.addEventListener('dragend', () => {
-            newChip.classList.remove('dragging');
-        });
-
-        // Add click handler for the remove button
-        const removeBtn = newChip.querySelector('.remove-btn');
-        removeBtn.addEventListener('click', (e) => {
-            e.stopPropagation(); // Prevent category filter activation
-            removeChip(newChip, category);
-        });
-
-        // Add click handler for category filtering
-        newChip.addEventListener('click', (e) => {
-            if (!e.target.closest('.remove-btn')) {
-                const sidebarChip = document.querySelector(`.filter-chips .chip[data-category="${category}"]`);
-                if (sidebarChip) {
-                    sidebarChip.click();
-                }
-            }
-        });
-
-        dragZone.appendChild(newChip);
-    }
-
-    function removeChip(chip, category) {
-        // Add removing animation class
-        chip.classList.add('removing');
-        
-        // Remove from localStorage
-        const savedCategories = JSON.parse(localStorage.getItem('draggedCategories') || '[]');
-        const updatedCategories = savedCategories.filter(cat => cat !== category);
-        localStorage.setItem('draggedCategories', JSON.stringify(updatedCategories));
-
-        // Remove chip after animation
-        setTimeout(() => {
-            chip.remove();
-            
-            // Show empty message if no chips left
-            const dragZone = elements.dragZone;
-            if (!dragZone.querySelector('.chip')) {
-                const emptyMessage = document.createElement('div');
-                emptyMessage.className = 'empty-message';
-                emptyMessage.style.cssText = 'color: var(--text-light); text-align: center; width: 100%;';
-                emptyMessage.textContent = 'Drag categories here to create shortcuts';
-                dragZone.appendChild(emptyMessage);
-            }
-        }, 300); // Match animation duration
     }
 
     // Start the app
