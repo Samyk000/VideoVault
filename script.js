@@ -248,9 +248,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         </div>
                         <div class="video-actions">
                             <div class="action-buttons">
-                                <button class="icon-btn visit-btn" onclick="window.open('${video.link}', '_blank')" title="Visit Link">
-                                    <i class="fas fa-external-link-alt"></i>
-                                </button>
                                 <button class="icon-btn copy-btn" data-link="${video.link}" title="Copy Link">
                                     <i class="fas fa-copy"></i>
                                 </button>
@@ -307,6 +304,37 @@ document.addEventListener('DOMContentLoaded', () => {
                     window.open(video.link, '_blank', 'noopener,noreferrer');
                 }
             });
+
+            // Update thumbnail handling
+            if (video.platform && video.platform.platform === 'youtube' && video.platform.videoId) {
+                // Try multiple thumbnail qualities
+                const thumbnailQualities = ['maxresdefault', 'hqdefault', 'mqdefault', 'default'];
+                let currentQuality = 0;
+
+                const img = new Image();
+                const tryLoadThumbnail = () => {
+                    if (currentQuality < thumbnailQualities.length) {
+                        img.src = `https://img.youtube.com/vi/${video.platform.videoId}/${thumbnailQualities[currentQuality]}.jpg`;
+                        img.onload = () => {
+                            if (img.width === 120 && thumbnailQualities[currentQuality] === 'default') {
+                                // YouTube's default response for invalid thumbnails
+                                currentQuality++;
+                                tryLoadThumbnail();
+                            } else {
+                                const thumbnail = card.querySelector('.video-thumbnail img');
+                                if (thumbnail) {
+                                    thumbnail.src = img.src;
+                                }
+                            }
+                        };
+                        img.onerror = () => {
+                            currentQuality++;
+                            tryLoadThumbnail();
+                        };
+                    }
+                };
+                tryLoadThumbnail();
+            }
 
             return card;
         },
@@ -529,6 +557,18 @@ document.addEventListener('DOMContentLoaded', () => {
             utils.showToast('Category added successfully!');
             elements.categoryModal.classList.remove('active');
             e.target.reset();
+        });
+
+        // Close sidebar when clicking outside
+        document.addEventListener('click', (e) => {
+            const sidebar = elements.sidebar;
+            const sidebarToggle = elements.sidebarToggle;
+            
+            if (state.isSidebarOpen && 
+                !sidebar.contains(e.target) && 
+                !sidebarToggle.contains(e.target)) {
+                utils.toggleSidebar();
+            }
         });
     }
 
