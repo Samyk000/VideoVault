@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VideoVault - Save & Organize Videos</title>
+    
+    <!-- CSS Libraries -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Mobile Sidebar Toggle -->
+    <button id="sidebarToggle" class="sidebar-toggle">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <!-- Header Section -->
+    <header>
+        <nav>
+            <div class="logo">
+                <i class="fas fa-play-circle"></i>
+                <h1>VideoVault</h1>
+            </div>
+            <div class="nav-controls">
+                <button id="viewToggle" class="icon-btn" title="Toggle View">
+                    <i class="fas fa-grid"></i>
+                </button>
+                <button id="themeToggle" class="icon-btn" title="Toggle Theme">
+                    <i class="fas fa-moon"></i>
+                </button>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Main Content Wrapper -->
+    <div class="content-wrapper">
+        <!-- Filters Sidebar -->
+        <aside class="filters-sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h2>Filters</h2>
+                <button id="closeSidebar" class="icon-btn">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div class="filter-group">
+                <h3>Search</h3>
+                <div class="search-bar">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="searchInput" placeholder="Search videos...">
+                </div>
+            </div>
+
+            <div class="filter-group">
+                <h3>Categories</h3>
+                <div class="filter-chips" id="categoryFilter">
+                    <button class="chip active" data-category="all">All</button>
+                    <button class="chip" data-category="entertainment">Entertainment</button>
+                    <button class="chip" data-category="education">Education</button>
+                    <button class="chip" data-category="music">Music</button>
+                    <button class="chip" data-category="gaming">Gaming</button>
+                    <button class="chip add-category" id="addCategoryBtn">
+                        <i class="fas fa-plus"></i> Add New
+                    </button>
+                </div>
+            </div>
+
+            <div class="filter-group">
+                <h3>Platforms</h3>
+                <div class="filter-chips" id="platformFilter">
+                    <button class="chip active" data-platform="all">All</button>
+                    <button class="chip" data-platform="youtube">
+                        <i class="fa-brands fa-youtube"></i> YouTube
+                    </button>
+                    <button class="chip" data-platform="instagram">
+                        <i class="fa-brands fa-instagram"></i> Reels
+                    </button>
+                    <button class="chip" data-platform="tiktok">
+                        <i class="fa-brands fa-tiktok"></i> TikTok
+                    </button>
+                </div>
+            </div>
+
+            <div class="filter-group">
+                <h3>Sort By</h3>
+                <select id="sortFilter" class="select-styled">
+                    <option value="newest">Newest First</option>
+                    <option value="oldest">Oldest First</option>
+                    <option value="title">Title</option>
+                    <option value="category">Category</option>
+                </select>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <div class="content-header">
+                <div class="stats">
+                    <div class="stat-item">
+                        <span id="videoCount">0</span>
+                        <p>Videos</p>
+                    </div>
+                    <div class="stat-item">
+                        <span id="categoryCount">0</span>
+                        <p>Categories</p>
+                    </div>
+                </div>
+                
+                <div class="draggable-categories" id="dragZone">
+                    <div class="empty-message" style="color: var(--text-light); text-align: center; width: 100%;">
+                        Drag categories here to create shortcuts
+                    </div>
+                </div>
+            </div>
+
+            <div class="video-grid" id="videoGrid">
+                <!-- Videos will be dynamically added here -->
+                <div class="empty-state" id="emptyState">
+                    <i class="fas fa-video"></i>
+                    <h3>No videos yet</h3>
+                    <p>Start adding your favorite videos!</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Context Menu for Mobile -->
+    <div class="context-menu" id="contextMenu">
+        <button class="context-menu-item" data-action="visit">
+            <i class="fas fa-external-link-alt"></i> Visit Link
+        </button>
+        <button class="context-menu-item" data-action="copy">
+            <i class="fas fa-copy"></i> Copy Link
+        </button>
+        <button class="context-menu-item" data-action="edit">
+            <i class="fas fa-edit"></i> Edit
+        </button>
+        <button class="context-menu-item" data-action="delete">
+            <i class="fas fa-trash"></i> Delete
+        </button>
+    </div>
+
+    <!-- Add/Edit Video Modal -->
+    <div class="modal" id="videoModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Add New Video</h3>
+                <button class="close-btn" id="closeVideoModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="videoForm">
+                <input type="hidden" id="videoId">
+                <div class="form-group">
+                    <label for="videoLink">Video Link</label>
+                    <input type="url" id="videoLink" name="videoLink" required 
+                           placeholder="Paste video link here">
+                </div>
+                <div class="form-group">
+                    <label for="videoTitle">Title</label>
+                    <input type="text" id="videoTitle" name="videoTitle" required 
+                           placeholder="Enter video title">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="videoCategory">Category</label>
+                        <select id="videoCategory" name="videoCategory" required>
+                            <option value="">Select Category</option>
+                            <option value="entertainment">Entertainment</option>
+                            <option value="education">Education</option>
+                            <option value="music">Music</option>
+                            <option value="gaming">Gaming</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn secondary" id="cancelVideoBtn">Cancel</button>
+                    <button type="submit" class="btn primary" id="saveVideoBtn">
+                        <i class="fas fa-save"></i>
+                        <span>Save Video</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Category Modal -->
+    <div class="modal" id="categoryModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add New Category</h3>
+                <button class="close-btn" id="closeCategoryModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="categoryForm">
+                <div class="form-group">
+                    <label for="categoryName">Category Name</label>
+                    <input type="text" id="categoryName" name="categoryName" required 
+                           placeholder="Enter category name">
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn secondary" id="cancelCategoryBtn">Cancel</button>
+                    <button type="submit" class="btn primary">Add Category</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Floating Action Button -->
+    <button class="fab" id="addVideoBtn" title="Add New Video">
+        <i class="fas fa-plus"></i>
+    </button>
+
+    <!-- Toast Notifications -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Scripts -->
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script src="https://hammerjs.github.io/dist/hammer.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
